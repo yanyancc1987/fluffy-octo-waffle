@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek-R1制度咨询助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+    <style>
+        :root {
+            --primary: #4e6fff;
+            --primary-light: #eef1ff;
+            --primary-dark: #3a55cc;
+            --secondary: #8a63d2;
+            --accent: #00c9a7;
+            --text: #2d3748;
+            --text-light: #718096;
+            --text-lighter: #a0aec0;
+            --bg: #f7f9ff;
+            --card-bg: #ffffff;
+            --sidebar-bg: #f8fafc;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 4px 20px rgba(78, 111, 255, 0.08);
+            --shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --radius: 16px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        /* 头部样式 - 双行设计 */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            background: rgba(255, 255, 255, 0.15);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .header-bottom {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+        }
+
+        nav a.active, nav a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            z-index: 10;
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-title i {
+            color: var(--primary);
+        }
+
+        .action-btn {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .material-selector {
+            background: var(--card-bg);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            z-index: 5;
+        }
+
+        .selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .selector-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .selector-title i {
+            color: var(--primary);
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .clear-btn:hover {
+            background: rgba(78, 111, 255, 0.1);
+        }
+
+        .selector-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .select-all-btn {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            border-radius: 50px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .select-all-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .selected-materials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .material-tag {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            transition: var(--transition);
+        }
+
+        .material-tag:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(78, 111, 255, 0.1);
+        }
+
+        .material-tag i {
+            color: var(--text-lighter);
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .material-tag i:hover {
+            color: var(--danger);
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.05"><rect fill="none" stroke="%234e6fff" stroke-width="2" x="10" y="10" width="80" height="80" rx="20" ry="20"/></svg>');
+            background-size: 120px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 85%;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 600;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .user .avatar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .message-content {
+            padding: 18px 20px;
+            border-radius: 18px;
+            background: var(--primary-light);
+            position: relative;
+            box-shadow: var(--shadow-dark);
+            min-width: 240px;
+            transition: var(--transition);
+        }
+
+        .message-content:hover {
+            box-shadow: 0 6px 16px rgba(78, 111, 255, 0.15);
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .assistant .message-content {
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 14px;
+            height: 14px;
+            background: inherit;
+        }
+
+        .assistant .message-content::after {
+            left: -7px;
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
+
+        .user .message-content::after {
+            right: -7px;
+            clip-path: polygon(0 0, 0 100%, 100% 0);
+        }
+
+        .message-text {
+            line-height: 1.7;
+        }
+
+        .message-text p {
+            margin-bottom: 12px;
+        }
+
+        .message-text ul, .message-text ol {
+            padding-left: 24px;
+            margin-bottom: 12px;
+        }
+
+        .message-text li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .message-text li::before {
+            content: '•';
+            position: absolute;
+            left: -16px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .user .message-text li::before {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message-text strong {
+            color: var(--primary-dark);
+        }
+
+        .user .message-text strong {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .material-ref {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user .material-ref {
+            color: rgba(255, 255, 255, 0.7);
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .material-ref span {
+            color: var(--primary);
+            font-weight: 500;
+            background: rgba(78, 111, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .user .material-ref span {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-container {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            background: white;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .input-box {
+            position: relative;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 8px;
+            background: white;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(78, 111, 255, 0.15);
+        }
+
+        textarea {
+            width: 100%;
+            border: none;
+            resize: none;
+            padding: 14px 16px;
+            font-family: inherit;
+            font-size: 15px;
+            height: 100px;
+            max-height: 200px;
+            outline: none;
+            background: transparent;
+            line-height: 1.6;
+        }
+
+        .input-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px 8px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 10px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(78, 111, 255, 0.3);
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(78, 111, 255, 0.4);
+        }
+
+        .send-btn:disabled {
+            background: var(--text-lighter);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-light);
+            font-size: 14px;
+            padding: 8px 0 0;
+            margin-top: 8px;
+            border-top: 1px solid var(--border);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 素材管理界面 */
+        .material-manager {
+            display: flex;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--sidebar-bg);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .tree-item {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            margin-bottom: 6px;
+            transition: var(--transition);
+        }
+
+        .tree-item:hover {
+            background: var(--primary-light);
+        }
+
+        .tree-item.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .tree-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .tree-item.active i {
+            color: white;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+        }
+
+        .editor-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .editor {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .markdown-editor, .preview {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .markdown-editor {
+            border-right: 1px solid var(--border);
+            font-family: 'Inter', monospace;
+            resize: none;
+            border: none;
+            outline: none;
+            background: var(--sidebar-bg);
+        }
+
+        .preview {
+            padding: 24px 32px;
+            background: white;
+        }
+
+        .divider {
+            width: 1px;
+            background: var(--border);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+            }
+            
+            .editor {
+                flex-direction: column;
+            }
+            
+            .markdown-editor, .preview {
+                height: 300px;
+            }
+            
+            .divider {
+                width: 100%;
+                height: 1px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 水波动画 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>DeepSeek-R1制度咨询助手</span>
+            </div>
+            <div class="user-info">
+                <div class="avatar">A</div>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" data-view="chat"><i class="fas fa-comment-alt"></i> 智能问答</a></li>
+                    <li><a href="#" data-view="manage"><i class="fas fa-folder-open"></i> 素材管理</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> 系统设置</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- 聊天界面 -->
+        <div class="main-content" id="chat-view">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-robot"></i>
+                        <span>制度咨询助手</span>
+                    </div>
+                    <button class="action-btn">
+                        <i class="fas fa-redo"></i> 开始新对话
+                    </button>
+                </div>
+                
+                <div class="material-selector">
+                    <div class="selector-header">
+                        <div class="selector-title">
+                            <i class="fas fa-file-alt"></i>
+                            <span>选择制度素材</span>
+                        </div>
+                        <button class="clear-btn">
+                            <i class="fas fa-times"></i> 清除选择
+                        </button>
+                    </div>
+                    <div class="selected-materials" id="selected-materials">
+                        <!-- 已选素材标签将在这里动态生成 -->
+                    </div>
+                    <div class="selector-actions">
+                        <button class="select-all-btn" id="select-all-btn">
+                            <i class="fas fa-check-circle"></i> 选择全部制度
+                        </button>
+                        <div style="flex: 1"></div>
+                        <span style="font-size: 13px; color: var(--text-light);">
+                            已选择 <span id="selected-count">0</span> 个制度文件
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="chat-history" id="chat-history">
+                    <div class="message assistant">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <p>您好！我是基于DeepSeek-R1的制度咨询助手，请选择相关制度素材后向我提问。</p>
+                                <p>我可以帮助您：</p>
+                                <ul>
+                                    <li>解释制度条款的具体含义</li>
+                                    <li>查找特定主题的相关规定</li>
+                                    <li>对比不同制度中的相关条款</li>
+                                    <li>提供制度应用的实践建议</li>
+                                </ul>
+                                <p><strong>温馨提示：</strong>使用"选择全部制度"功能可进行跨制度综合查询</p>
+                            </div>
+                            <div class="material-ref">基于素材：<span>所有制度</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-container">
+                    <div class="input-box">
+                        <textarea id="message-input" placeholder="输入您的问题，按Shift+Enter换行..."></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-paperclip"></i> 添加附件
+                            </button>
+                            <button class="send-btn" id="send-btn">
+                                <i class="fas fa-paper-plane"></i> 发送
+                            </button>
+                        </div>
+                    </div>
+                    <div class="typing-indicator" id="typing-indicator">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <span>DeepSeek-R1正在思考中</span>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 素材管理界面 -->
+        <div class="main-content hidden" id="manage-view">
+            <div class="material-manager">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="sidebar-title">
+                            <i class="fas fa-folder-tree"></i>
+                            <span>制度素材库</span>
+                        </div>
+                        <button class="action-btn">
+                            <i class="fas fa-plus"></i> 新建文件夹
+                        </button>
+                    </div>
+                    <div class="tree-container">
+                        <div class="tree-item active">
+                            <i class="fas fa-folder-open"></i> 人力资源制度
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-file-alt"></i> 员工考勤制度.md
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-file-alt"></i> 绩效考核制度.md
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-file-alt"></i> 薪酬福利制度.md
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-folder"></i> 财务制度
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-folder"></i> 行政管理制度
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-file-alt"></i> 财务报销制度.md
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-file-alt"></i> 采购管理制度.md
+                        </div>
+                        <div class="tree-item">
+                            <i class="fas fa-folder"></i> 技术规范
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="editor-title">员工考勤制度.md</div>
+                        <div class="editor-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-file-download"></i> 下载
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                            <button class="action-btn" style="color: var(--danger);">
+                                <i class="fas fa-trash-alt"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="editor">
+                        <textarea class="markdown-editor" id="markdown-editor">
+# 员工考勤制度
+
+## 第一章 总则
+
+**第一条** 为规范公司员工考勤管理，维护正常工作秩序，特制定本制度。
+
+**第二条** 本制度适用于公司全体员工。
+
+## 第二章 工作时间
+
+**第三条** 公司实行标准工时制：
+- 周一至周五：上午9:00-12:00，下午13:30-18:00
+- 午休时间：12:00-13:30
+
+**第四条** 弹性工作制：
+- 核心工作时间：10:00-16:00
+- 员工可选择8:00-10:00间到岗，相应调整下班时间
+
+## 第三章 考勤方式
+
+**第五条** 员工每日上下班需通过以下方式打卡：
+1. 公司门禁系统刷卡
+2. 企业微信定位打卡（外勤人员）
+
+**第六条** 迟到、早退处理：
+- 月累计≤3次：口头提醒
+- 月累计4-6次：书面警告
+- 月累计≥7次：扣发当月绩效奖金20%
+
+## 第四章 请假管理
+
+**第七条** 请假类型：
+1. 事假：提前3天申请，全年累计≤15天
+2. 病假：提供医疗机构证明
+3. 婚假：15天（需结婚证明）
+4. 产假：158天（含产前假）
+
+**第八条** 请假审批权限：
+- ≤3天：部门经理审批
+- 4-7天：分管副总审批
+- ≥8天：总经理审批
+
+## 第五章 休假管理
+
+**第九条** 法定节假日：
+按国家规定执行，具体安排以公司通知为准。
+
+**第十条** 年休假：
+1. 工作满1年不满10年：5天/年
+2. 工作满10年不满20年：10天/年
+3. 工作满20年以上：15天/年
+
+**第十一条** 年假使用规则：
+- 需提前15天申请
+- 原则上一次性使用
+- 跨年不累计（特殊审批除外）
+                        </textarea>
+                        <div class="divider"></div>
+                        <div class="preview" id="preview">
+                            <!-- Markdown预览将在这里渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 视图切换
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 更新导航状态
+                document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 切换视图
+                const view = this.getAttribute('data-view');
+                document.getElementById('chat-view').classList.toggle('hidden', view !== 'chat');
+                document.getElementById('manage-view').classList.toggle('hidden', view !== 'manage');
+            });
+        });
+        
+        // 初始化Markdown预览
+        const editor = document.getElementById('markdown-editor');
+        const preview = document.getElementById('preview');
+        
+        function renderMarkdown() {
+            const content = editor.value;
+            const html = DOMPurify.sanitize(marked.parse(content));
+            preview.innerHTML = html;
+        }
+        
+        editor.addEventListener('input', renderMarkdown);
+        renderMarkdown();
+        
+        // 水波动画效果
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+            circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+            circle.classList.add("ripple");
+            
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) ripple.remove();
+            
+            button.appendChild(circle);
+        }
+        
+        // 添加水波动画到按钮
+        document.querySelectorAll('.send-btn, .action-btn, .select-all-btn').forEach(button => {
+            button.addEventListener('click', createRipple);
+        });
+        
+        // 聊天功能
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const selectedMaterialsContainer = document.getElementById('selected-materials');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const selectedCount = document.getElementById('selected-count');
+        
+        // 可用素材列表
+        const materials = [
+            "员工考勤制度.md",
+            "绩效考核制度.md",
+            "薪酬福利制度.md",
+            "财务报销制度.md",
+            "采购管理制度.md",
+            "信息安全规范.md",
+            "项目管理制度.md",
+            "员工手册.md"
+        ];
+        
+        // 当前选中的素材
+        let selectedMaterials = [];
+        
+        // 渲染选中的素材标签
+        function renderSelectedMaterials() {
+            selectedMaterialsContainer.innerHTML = '';
+            
+            selectedMaterials.forEach(material => {
+                const tag = document.createElement('div');
+                tag.className = 'material-tag';
+                tag.innerHTML = `
+                    ${material} <i class="fas fa-times"></i>
+                `;
+                
+                // 添加删除事件
+                tag.querySelector('i').addEventListener('click', () => {
+                    selectedMaterials = selectedMaterials.filter(m => m !== material);
+                    renderSelectedMaterials();
+                });
+                
+                selectedMaterialsContainer.appendChild(tag);
+            });
+            
+            selectedCount.textContent = selectedMaterials.length;
+        }
+        
+        // 选择全部制度
+        selectAllBtn.addEventListener('click', () => {
+            if (selectedMaterials.length === materials.length) {
+                selectedMaterials = [];
+            } else {
+                selectedMaterials = [...materials];
+            }
+            renderSelectedMaterials();
+            
+            // 更新按钮文本
+            if (selectedMaterials.length === materials.length) {
+                selectAllBtn.innerHTML = '<i class="fas fa-times-circle"></i> 取消全选';
+            } else {
+                selectAllBtn.innerHTML = '<i class="fas fa-check-circle"></i> 选择全部制度';
+            }
+        });
+        
+        // 添加一些初始选中的素材
+        selectedMaterials = ["员工考勤制度.md", "薪酬福利制度.md"];
+        renderSelectedMaterials();
+        
+        // 模拟AI响应
+        async function simulateAIResponse(userMessage) {
+            return new Promise(resolve => {
+                // 显示正在输入指示器
+                typingIndicator.classList.add('visible');
+                sendBtn.disabled = true;
+                
+                // 确定响应内容
+                let aiMessage = '';
+                let materialRef = '';
+                
+                if (userMessage.includes('年假')) {
+                    aiMessage = `根据《员工考勤制度》第五章第12条规定：\n\n**"员工年假天数根据累计工作年限确定：**\n\n- 工作满1年不满10年，年休假5天；\n- 工作满10年不满20年，年休假10天；\n- 工作满20年以上，年休假15天。"\n\n计算方法：年假按自然年度计算，新入职员工当年度年假天数按入职后剩余日历天数折算。\n\n**补充说明：**\n- 年假需提前15天申请\n- 原则上应一次性使用\n- 未休年假可折算工资（需审批）`;
+                    materialRef = "员工考勤制度.md 第五章 休假管理";
+                } else if (userMessage.includes('加班')) {
+                    aiMessage = `根据《员工考勤制度》第四章第11条规定：\n\n**"员工加班需提前申请，经部门经理批准后方可执行。加班时间计算标准如下：**\n\n1. 工作日加班：按小时工资的150%计算\n2. 休息日加班：按小时工资的200%计算\n3. 法定节假日加班：按小时工资的300%计算"\n\n**特别说明：**\n- 加班需提前24小时在OA系统提交申请\n- 每月加班总时长不得超过36小时\n- 加班补贴随当月工资发放`;
+                    materialRef = "员工考勤制度.md 第四章 加班管理";
+                } else if (userMessage.includes('报销') || userMessage.includes('费用')) {
+                    aiMessage = `根据《财务报销制度》第三章第8条规定：\n\n**"差旅费用报销标准如下：**\n\n| 城市级别 | 住宿标准 | 餐补标准 |\n|----------|----------|----------|\n| 一线城市 | ≤600元/天 | 150元/天 |\n| 二线城市 | ≤400元/天 | 120元/天 |\n| 三线城市 | ≤300元/天 | 100元/天 |\n\n**交通标准：**\n- 高铁：二等座\n- 飞机：经济舱（飞行时间≥3小时可申请商务舱）\n\n**报销流程：**\n1. 填写电子报销单\n2. 上传原始票据\n3. 部门经理审批\n4. 财务部审核（3个工作日内）\n5. 出纳付款"`;
+                    materialRef = "财务报销制度.md 第三章 差旅报销";
+                } else if (selectedMaterials.length === materials.length) {
+                    aiMessage = `基于所有制度综合分析：\n\n您的问题涉及多个制度文件，以下是关键要点总结：\n\n1. **考勤管理**（员工考勤制度）\n   - 标准工时：9:00-12:00, 13:30-18:00\n   - 弹性工作制核心时段：10:00-16:00\n\n2. **薪酬福利**（薪酬福利制度）\n   - 基本工资占比60%，绩效工资占比40%\n   - 五险一金按全额工资缴纳\n   - 年度调薪幅度：3-10%（基于绩效）\n\n3. **财务报销**（财务报销制度）\n   - 差旅费：一线城市≤600元/天\n   - 业务招待费：总监级≤800元/次\n   - 办公用品：月度预算制\n\n4. **绩效考核**（绩效考核制度）\n   - 季度考核：目标完成率+能力评估\n   - 年度考核：季度平均分+360度评估\n   - S级员工：年终奖≥4个月工资\n\n如需具体条款细节，请指定制度文件进一步查询。`;
+                    materialRef = "所有制度文件";
+                } else {
+                    aiMessage = `根据您提供的制度素材，我找到以下相关信息：\n\n**核心要点：**\n- 员工试用期为3个月，表现优秀者可提前转正\n- 转正流程：个人申请 → 部门评价 → HR审核 → 总经理审批\n- 转正后享受全额工资及完整福利待遇\n\n**相关制度：**\n1. 《员工手册》第三章 入职与转正\n2. 《薪酬福利制度》第二章 薪酬结构\n\n如需更详细信息，建议查阅具体制度文件或补充相关素材。`;
+                    materialRef = "员工手册.md, 薪酬福利制度.md";
+                }
+                
+                // 创建消息容器
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message assistant';
+                messageElement.innerHTML = `
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">${aiMessage.substring(0, 1)}</div>
+                        <div class="material-ref">引用自：<span>${materialRef}</span></div>
+                    </div>
+                `;
+                
+                chatHistory.appendChild(messageElement);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+                
+                let i = 1;
+                const interval = setInterval(() => {
+                    if (i < aiMessage.length) {
+                        const contentDiv = messageElement.querySelector('.message-text');
+                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(aiMessage.substring(0, i + 1)));
+                        i++;
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+                    } else {
+                        clearInterval(interval);
+                        typingIndicator.classList.remove('visible');
+                        sendBtn.disabled = false;
+                        resolve();
+                    }
+                }, 20);
+            });
+        }
+        
+        function addUserMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message user';
+            messageElement.innerHTML = `
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${DOMPurify.sanitize(marked.parse(message))}</div>
+                    <div class="material-ref">基于素材：<span>${selectedMaterials.join(', ') || '未选择'}</span></div>
+                </div>
+            `;
+            
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        sendBtn.addEventListener('click', async () => {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // 如果没有选择素材
+            if (selectedMaterials.length === 0 && !confirm('您尚未选择任何制度素材，是否使用所有制度进行查询？')) {
+                return;
+            }
+            
+            addUserMessage(message);
+            messageInput.value = '';
+            
+            // 模拟AI响应
+            await simulateAIResponse(message);
+        });
+        
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
+        
+        // 清除选择的素材
+        document.querySelector('.clear-btn').addEventListener('click', function() {
+            selectedMaterials = [];
+            renderSelectedMaterials();
+            selectAllBtn.innerHTML = '<i class="fas fa-check-circle"></i> 选择全部制度';
+        });
+        
+        // 树形菜单点击
+        document.querySelectorAll('.tree-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (this.querySelector('i').classList.contains('fa-file-alt')) {
+                    const fileName = this.textContent.trim();
+                    document.querySelector('.editor-title').textContent = fileName;
+                    
+                    // 模拟加载文件内容
+                    if (fileName === '财务报销制度.md') {
+                        editor.value = `# 财务报销制度\n\n## 第一章 总则\n\n**第一条** 为规范公司费用报销流程，特制定本制度。\n\n**第二条** 报销范围包括：差旅费、业务招待费、办公用品购置费等。\n\n## 第二章 报销标准\n\n**第三条** 差旅费标准：\n- 一线城市：住宿费≤600元/天，餐补150元/天\n- 二线城市：住宿费≤400元/天，餐补120元/天\n- 三线城市：住宿费≤300元/天，餐补100元/天\n\n**第四条** 交通标准：\n- 高铁：二等座\n- 飞机：经济舱（飞行时间≥3小时可申请商务舱）`;
+                    } else if (fileName === '员工考勤制度.md') {
+                        editor.value = document.getElementById('markdown-editor').value;
+                    }
+                    
+                    renderMarkdown();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
